@@ -166,7 +166,7 @@ data_agg %>%
 
 ![](PA1_template_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
 
-The graph shows us that the day interval when people are the most active is 3.09\times 10^{4}. On average, people went 179.13 steps during that interval.
+The graph shows us that the day interval when people are the most active is 08:35:00. On average, people went 179.13 steps during that interval.
 
 ## Imputing missing values
 

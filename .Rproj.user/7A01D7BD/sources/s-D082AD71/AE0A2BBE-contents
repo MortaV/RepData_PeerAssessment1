@@ -149,7 +149,7 @@ data_agg %>%
 
 ```
 
-The graph shows us that the day interval when people are the most active is `r max_interval`. On average, people went `r comma_format(accuracy = 0.01)(max_value)` steps during that interval.
+The graph shows us that the day interval when people are the most active is `r format(max_interval,"%H:%M")`. On average, people went `r comma_format(accuracy = 0.01)(max_value)` steps during that interval.
 
 ## Imputing missing values
 
