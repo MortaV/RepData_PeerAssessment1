@@ -11,7 +11,25 @@ I have added a css file to make an html file more personal :) it is not reflecte
 
 ## Loading and preprocessing the data
 
-First of all we need to unzip and read the data from activity.zip folder:
+I like to have all needed packages in one place, so first - I will upload all of them and will also create a theme for *ggplot* graphs.
+
+
+```r
+library(tidyverse)
+library(extrafont)
+library(scales)
+library(lubridate)
+
+theme <- theme_minimal() +
+    theme(plot.title = element_text(hjust = 0.5, size = 14),
+          plot.subtitle = element_text(hjust = 0.5),
+          text = element_text(family = "Lucida Sans Unicode", colour = "#003C5A"), 
+          legend.position = "bottom",
+          strip.background = element_rect(fill = "#F9EBEA"),
+          strip.text = element_text(colour = "#003C5A"))
+```
+
+Then we need to unzip and read the data from activity.zip folder:
 
 
 ```r
@@ -54,16 +72,13 @@ So it seems that `steps` column has some missing data which we will ignore for n
 
 
 ```r
-library(lubridate)
 data$date <- ymd(data$date)
 ```
 
-We should also change interval data as it has form *hhmm* instead of just representing actual time of the date. You can see it from summary statistics, where max value for `interval` is 2355 what would represent 2.826\times 10^{4} hours a day...
+We should also change interval data as it has form *hhmm* instead of just representing actual time of the date. You can see it from summary statistics, where max value for `interval` is 2355. 
 
 
 ```r
-library(tidyverse)
-
 data <- data %>%
     mutate(hours = str_pad(floor(interval / 100), 2, side="left", pad="0"),
            minutes = str_pad(interval %% 100, 2, side="left", pad="0"),
@@ -85,17 +100,6 @@ When the data is ready, let's explore it with a simple histogram:
 
 
 ```r
-library(extrafont)
-library(scales)
-
-theme <- theme_minimal() +
-    theme(plot.title = element_text(hjust = 0.5, size = 14),
-          plot.subtitle = element_text(hjust = 0.5),
-          text = element_text(family = "Lucida Sans Unicode", colour = "#003C5A"), 
-          legend.position = "bottom",
-          strip.background = element_rect(fill = "#F9EBEA"),
-          strip.text = element_text(colour = "#003C5A"))
-
 data_mean <- mean(data_per_day$total_steps)
 data_median <- median(data_per_day$total_steps)
 
@@ -117,7 +121,11 @@ data_per_day %>%
                         values = c(Mean = 1, Median = 2))
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+```
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
 
 Reported mean is 9,354.23 steps per day and median is 10,395.00 steps per day.
 
@@ -156,7 +164,7 @@ data_agg %>%
                      labels = date_format("%H:%M"))
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+![](PA1_template_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
 
 The graph shows us that the day interval when people are the most active is 3.09\times 10^{4}. On average, people went 179.13 steps during that interval.
 
@@ -221,7 +229,11 @@ data_per_day_imputed %>%
                         values = c(Mean = 1, Median = 2))
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
+```
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
 
 The new mean is 9,354.23 which is 0.00 more than previously. The new median is 10,395.00 which is 0.00  more than previously. 
 
@@ -260,7 +272,7 @@ data_week %>%
     facet_grid(weekend_indication~.)
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
+![](PA1_template_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
 
 As we can see, weekends don't have such a huge peak as it is probably caused by the working hours (people are going to work at around 9:00). 
 

@@ -1,4 +1,0 @@
-"0","data <- read.csv(""activity.zip"")"
-"2","line 1 appears to contain embedded nulls"
-"2","line 2 appears to contain embedded nulls"
-"2","line 4 appears to contain embedded nulls"

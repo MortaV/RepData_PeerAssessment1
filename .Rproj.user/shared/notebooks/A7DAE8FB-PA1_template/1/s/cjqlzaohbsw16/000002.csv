@@ -1,4 +1,0 @@
-"0","data$date <- ymd(data$date)
-"
-"2","Error in ymd(data$date) : could not find function ""ymd""
-"

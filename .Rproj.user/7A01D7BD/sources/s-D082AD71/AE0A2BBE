@@ -5,15 +5,15 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "2247305807",
+    "hash" : "270541403",
     "id" : "AE0A2BBE",
-    "lastKnownWriteTime" : 1542132633,
-    "last_content_update" : 1542132633468,
+    "lastKnownWriteTime" : 1542133905,
+    "last_content_update" : 1542133905883,
     "path" : "C:/Users/PC/Desktop/R course/datasciencecoursera/RepData_PeerAssessment1/PA1_template.Rmd",
     "project_path" : "PA1_template.Rmd",
     "properties" : {
-        "cursorPosition" : "9,153",
-        "scrollLine" : "0"
+        "cursorPosition" : "62,210",
+        "scrollLine" : "51"
     },
     "relative_order" : 1,
     "source_on_save" : false,

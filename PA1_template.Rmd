@@ -11,7 +11,24 @@ I have added a css file to make an html file more personal :) it is not reflecte
 
 ## Loading and preprocessing the data
 
-First of all we need to unzip and read the data from activity.zip folder:
+I like to have all needed packages in one place, so first - I will upload all of them and will also create a theme for *ggplot* graphs.
+
+```{r message=FALSE, warning=TRUE}
+library(tidyverse)
+library(extrafont)
+library(scales)
+library(lubridate)
+
+theme <- theme_minimal() +
+    theme(plot.title = element_text(hjust = 0.5, size = 14),
+          plot.subtitle = element_text(hjust = 0.5),
+          text = element_text(family = "Lucida Sans Unicode", colour = "#003C5A"), 
+          legend.position = "bottom",
+          strip.background = element_rect(fill = "#F9EBEA"),
+          strip.text = element_text(colour = "#003C5A"))
+```
+
+Then we need to unzip and read the data from activity.zip folder:
 
 ```{r}
 
@@ -37,17 +54,15 @@ summary(data)
 
 So it seems that `steps` column has some missing data which we will ignore for now. Also, `date` column has incorrect type. We will change it to *date* with *lubridate* package.
 
-```{r message=FALSE, warning=FALSE}
+```{r}
 
-library(lubridate)
 data$date <- ymd(data$date)
 
 ```
 
-We should also change interval data as it has form *hhmm* instead of just representing actual time of the date. You can see it from summary statistics, where max value for `interval` is `r max(data$interval)` what would represent `r round(max(data$interval) * 12, 0)` hours a day...
+We should also change interval data as it has form *hhmm* instead of just representing actual time of the date. You can see it from summary statistics, where max value for `interval` is `r max(data$interval)`. 
 
-```{r  message=FALSE, warning=TRUE}
-library(tidyverse)
+```{r}
 
 data <- data %>%
     mutate(hours = str_pad(floor(interval / 100), 2, side="left", pad="0"),
@@ -70,17 +85,7 @@ data_per_day <- data %>%
 
 When the data is ready, let's explore it with a simple histogram:
 
-```{r message=FALSE, warning=TRUE}
-library(extrafont)
-library(scales)
-
-theme <- theme_minimal() +
-    theme(plot.title = element_text(hjust = 0.5, size = 14),
-          plot.subtitle = element_text(hjust = 0.5),
-          text = element_text(family = "Lucida Sans Unicode", colour = "#003C5A"), 
-          legend.position = "bottom",
-          strip.background = element_rect(fill = "#F9EBEA"),
-          strip.text = element_text(colour = "#003C5A"))
+```{r}
 
 data_mean <- mean(data_per_day$total_steps)
 data_median <- median(data_per_day$total_steps)
@@ -178,7 +183,7 @@ data_per_day_imputed <- data_imputed %>%
 ```
 
 
-```{r message=FALSE, warning=TRUE}
+```{r}
 data_mean_imputed <- mean(data_per_day_imputed$total_steps)
 data_median_imputed <- median(data_per_day_imputed$total_steps)
 
