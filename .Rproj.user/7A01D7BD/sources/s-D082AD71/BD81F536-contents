@@ -1,0 +1,55 @@
+setwd("C:\\Users\\m.vilkaite\\OneDrive - Adform\\Ad Serving\\20180129_Device Insights\\3. Uploaded Data")
+
+library(tidyverse)
+library(gdata)
+library(readr)
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+library(scales)
+library(extrafont)
+
+theme <- theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, size = 14), 
+        text = element_text(family = "Lucida Sans Unicode", colour = "#003C5A"), 
+        legend.position ="bottom", panel.grid.minor.y = element_blank(),
+        panel.border = element_blank(),
+        axis.text.x=element_text(angle = 90, hjust = 1, vjust = 0.5, size = 8))
+
+WF <- read_csv("DT.csv", col_names = TRUE)
+
+str(WF)
+
+WF$date_format <- ymd(WF$yyyymmdd)
+WF$old_new <- ifelse(WF$cookieage == 1, "Old", "New")
+
+WF %>%
+  group_by(date_format, old_new, cookietype) %>%
+  summarize(num = sum(numberofcookies)) %>%
+  spread(old_new, num) %>%
+  mutate(perc = New/(Old + New)) %>%
+  ungroup() %>%
+  group_by(date_format) %>%
+  mutate(perc_total = sum(as.numeric(New))/(sum(as.numeric(Old)) + sum(as.numeric(New)))) %>%
+  ggplot(aes(x = date_format)) +
+  stat_summary(aes(group = 1, y = perc_total, fill = "Overall"), fun.y = mean, geom = 'area', alpha = 0.4) +
+  geom_line(aes(y = perc, colour = cookietype)) +
+  geom_point(aes(y = perc, colour = cookietype)) +
+  geom_vline(xintercept = ymd('2018-06-20'), color = '#003C5A', linetype = 2) +
+  geom_vline(xintercept = ymd('2018-06-12'), color = '#003C5A', linetype = 2) +
+  theme +
+  labs(title = "Percentage of one hour cookies - DT",
+       x = "Date",
+       y = "Percentage",
+       color = "Cookie Type",
+       fill = "") +
+  coord_cartesian(ylim = c(0, 0.5)) +
+  scale_y_continuous(labels = scales::percent_format(), breaks = seq(0,0.5,0.1)) +
+  scale_x_date(breaks = date_breaks("1 day"), minor_breaks = date_breaks("1 day"), labels = date_format("%d-%m")) +
+  annotate("text", vjust = 0, hjust = -0.1, label = c("DeviceInsights \n TPs release", "DeviceInsights \n update"), x = c(ymd('2018-06-12'), ymd('2018-06-20')), y = c(0.17, 0.17), family = "Lucida Sans Unicode", colour = "#003C5A", size = 3) +
+  scale_fill_manual(values = '#A0A0A0') +
+  scale_colour_manual(values = c('#ff0000', '#205976'), labels = c("DeviceInsights", "Random"))
+
+?comma_format
+knit2html()
+?knit2html

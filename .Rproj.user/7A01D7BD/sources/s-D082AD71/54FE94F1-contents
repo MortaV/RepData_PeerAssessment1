@@ -1,0 +1,655 @@
+---
+title: "StackOverflow Development Survey"
+output:
+  word_document:
+    toc: yes
+  html_document:
+    css: css_for_assignment.css
+    number_sections: yes
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(highcharter)
+library(ggrepel)
+library(scales)
+library(plotly)
+library(cowplot)
+library(knitr)
+library(forcats)
+library(extrafont)
+library(xtable)
+library(kableExtra)
+library(scales)
+library(RColorBrewer)
+
+survey18 <- read_csv("survey_results_public.csv")
+
+survey18$Employment[survey18$Employment == 'Independent contractor, freelancer, or self-employed'] <- 'Freelancer'
+survey18$Employment[survey18$Employment == 'Employed full-time'] <- 'Full-time'
+theme <- theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, size = 14), 
+        text = element_text(family = "Lucida Sans Unicode", colour = "#003C5A"), 
+        legend.position ="bottom", panel.grid.minor.y = element_blank(),
+        panel.border = element_blank(),
+        axis.text.x=element_text(angle = 90, hjust = 1, vjust = 0.5, size = 8))
+
+country <- 'Czech Republic'
+salary_limit <- 10000
+```
+
+# Respondents
+
+
+First of all, let's check what kind of respondents we had in `r country`. It will help us to identify if provided data is really relevant for our case.
+
+
+## Employment type
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+data <- survey18 %>% 
+  filter(Country %in% c(country)) %>%
+  select(Employment) %>%
+  replace(is.na(.), 'Not provided') %>%
+  group_by(Employment) %>%
+  summarize(n = n()) %>%
+  mutate(freq = n/sum(n)) %>%
+  arrange(desc(n))
+
+data_text <- data %>%
+  filter(Employment != 'Not provided')
+```
+
+
+Most of the respondents are working *`r data_text$Employment[1]`* (`r data$n[1]` respondents or `r percent_format()(data_text$freq[1])`). Second place goes to *`r data_text$Employment[2]`* (`r data_text$n[2]` respondents or `r percent_format()(data_text$freq[2])`).
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", paged.print=TRUE}
+plot_fun <- function(country){
+  data %>%
+  ggplot(aes(x = reorder(Employment, n), y = n)) +
+  geom_bar(fill = '#EBD769', stat = "identity", width = 0.7)+
+  labs(y = "Amount of respondents", x = "Employment", title = paste('Employment type -', country)) +
+  geom_text(aes(label=n, y = 5), vjust = 0.5, hjust = -0.1, family = "Lucida Sans Unicode", size = 2.75) +
+  theme +
+  coord_flip() +
+  theme(axis.text.x=element_text(angle = 0, hjust = 0, size = 8),
+        axis.title.y=element_blank())
+    }
+
+plot_fun(country)
+
+```
+
+## Role
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+data <- survey18 %>% 
+  filter(Country %in% c(country)) %>%
+  select(DevType) %>%
+  replace(is.na(.), 'Not provided') %>%
+  mutate(DevType = str_split(DevType, pattern = ";")) %>%
+  unnest(DevType) %>%
+  group_by(DevType) %>%
+  summarize(n = n()) %>%
+  mutate(freq = n/sum(n)) %>%
+  arrange(desc(n))
+
+data_text <- data %>%
+  filter(DevType != 'Not provided')
+```
+
+
+Respondents were allowed to provide several roles (for e.g. *Student; Mobile developer*). In such cases both roles are getting one people count.
+
+Most popular roles are *`r data_text$DevType[1]`* (`r data_text$n[1]` respondents or `r percent_format()(data_text$freq[1])`), *`r data_text$DevType[2]`* (`r data_text$n[2]` respondents or `r percent_format()(data_text$freq[2])`) and  *`r data_text$DevType[3]`* (`r data_text$n[2]` respondents or `r percent_format()(data_text$freq[3])`)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", paged.print=TRUE}
+plot_fun <- function(country){
+  data %>%
+  ggplot(aes(x = reorder(DevType, n), y = n)) +
+  geom_bar(fill = '#EBD769', stat = "identity", width = 0.7) +
+  labs(y = "Amount of respondents", x = "Role", title = paste('Role -', country)) +
+  geom_text(aes(label=n, y = 5), vjust = 0.5, hjust = -0.1, family = "Lucida Sans Unicode", size = 2.75) +
+  theme +
+  coord_flip() +
+  theme(axis.text.x=element_text(angle = 0, hjust = 0, size = 8),
+        axis.title.y=element_blank())
+    }
+
+plot_fun(country)
+
+```
+
+## Age
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+data <- survey18 %>% 
+  filter(Country %in% c(country)) %>%
+  select(Age) %>%
+  replace(is.na(.), 'Not provided') %>%
+  group_by(Age) %>%
+  summarize(n = n()) %>%
+  mutate(freq = n/sum(n))
+
+data$Age <- factor(data$Age, ordered = TRUE, levels = c("Not provided", "Under 18 years old","18 - 24 years old","25 - 34 years old","35 - 44 years old","45 - 54 years old","55 - 64 years old", "65 years or older"))
+
+data_text <- data %>%
+  filter(Age != 'Not provided') %>%
+  arrange(desc(n))
+```
+
+
+When checking the age of survey participants, we can see that most of them are *`r data_text$Age[1]`* (`r data_text$n[1]` respondents or `r percent_format()(data_text$freq[1])`), `r data_text$n[2]` (`r percent_format()(data_text$freq[2])`) - *`r data_text$Age[2]`* and `r data_text$n[3]` (`r percent_format()(data_text$freq[3])`) - *`r data_text$Age[3]`*.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", paged.print=TRUE}
+plot_fun <- function(country){
+  data %>%
+  ggplot(aes(x = Age, y = n)) +
+  geom_bar(fill = '#EBD769', stat = "identity", width = 0.7)+
+  labs(y = "Amount of respondents", x = "Age", title = paste('Age distribution -', country)) +
+  geom_text(aes(label=n, y = 5), vjust = 0.5, hjust = -0.1, family = "Lucida Sans Unicode", size = 2.75) +
+  theme +
+  coord_flip() +
+  theme(axis.text.x=element_text(angle = 0, hjust = 0, size = 8),
+        axis.title.y=element_blank())
+    }
+
+plot_fun(country)
+
+```
+
+## Coding experience
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+data <- survey18 %>% 
+  filter(Country %in% c(country)) %>%
+  select(YearsCodingProf) %>%
+  replace(is.na(.), 'Not provided') %>%
+  group_by(YearsCodingProf) %>%
+  summarize(n = n()) %>%
+  ungroup(YearsCodingProf) %>%
+  mutate(freq = n/sum(n)) %>%
+  arrange(desc(n))
+
+  data$YearsCodingProf <- factor(data$YearsCodingProf, ordered = TRUE, levels = c("Not provided", "0-2 years","3-5 years","6-8 years","9-11 years","12-14 years","15-17 years","18-20 years","21-23 years","24-26 years","27-29 years","30 or more years"))
+  
+  data_text <- data %>%
+  filter(YearsCodingProf != 'Not provided')
+  
+```
+
+
+In `r country`'s market, biggest part of all developers have *`r data_text$YearsCodingProf[1]`* of coding experience (`r data_text$n[1]` respondents or `r percent_format()(data_text$freq[1])`), `r data_text$n[2]` respondents or `r percent_format()(data_text$freq[2])` have *`r data_text$YearsCodingProf[2]`* of experince and `r data_text$n[3]` respondents (`r percent_format()(data_text$freq[3])`) - *`r data_text$YearsCodingProf[3]`*.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", paged.print=TRUE}
+plot_fun <- function(country){
+  data %>%
+  ggplot(aes(x = YearsCodingProf, y = n)) +
+  geom_bar(fill = '#EBD769', stat = "identity", width = 0.7)+
+  labs(y = "Amount of respondents", x = "Coding experience", title = paste('Coding experience -', country)) +
+  geom_text(aes(label=n, y = 5), vjust = 0.5, hjust = -0.1, family = "Lucida Sans Unicode", size = 2.75) +
+  theme +
+  coord_flip() +
+  theme(axis.text.x=element_text(angle = 0, hjust = 0, size = 8),
+        axis.title.y=element_blank())
+    }
+
+plot_fun(country)
+
+```
+
+# Work satisfaction related metrics
+
+Survey participants were asked to evaluate their work satisfaction in their current work place. They were give seven possible options:
+
+* Extremely dissatisfied;
+* Slightly dissatisfied;
+* Moderately dissatisfied;
+* Neither satisfied nor dissatisfied;
+* Moderately satisfied;
+* Slightly satisfied;
+* Extremely satisfied.
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+data <- survey18 %>% 
+  filter(Country %in% c(country)) %>%
+  select(JobSatisfaction) %>%
+  replace(is.na(.), 'Not provided') %>%
+  group_by(JobSatisfaction) %>%  
+  summarise(n=n())%>% 
+  ungroup() %>%
+  mutate(freq = n/sum(n))
+
+data$JobSatisfaction <- factor(data$JobSatisfaction, ordered = TRUE,
+                               levels = c('Not provided','Extremely dissatisfied','Slightly dissatisfied','Moderately dissatisfied','Neither satisfied nor dissatisfied','Moderately satisfied','Slightly satisfied','Extremely satisfied'))
+
+data_for_text <- data %>%
+  filter(JobSatisfaction != "Not provided") %>%
+  arrange(desc(n))
+```
+
+
+## Overall job satisfaction
+
+Most of the respondents (`r data_for_text$n[1]`, `r percent_format()(data_for_text$freq[1])`) are *`r data_for_text$JobSatisfaction[1]`*. `r data_for_text[data_for_text$JobSatisfaction == 'Extremely dissatisfied',]$n` (`r percent_format()(data_for_text[data_for_text$JobSatisfaction == 'Extremely dissatisfied',]$freq)`) are *Extremely dissatisfied* and `r data_for_text[data_for_text$JobSatisfaction == 'Extremely satisfied',]$n` (`r percent_format()(data_for_text[data_for_text$JobSatisfaction == 'Extremely satisfied',]$freq)`) are *Extremely satisfied* with their work.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center"}
+plot_fun <- function(country){
+  data %>% 
+  ggplot(aes(x = JobSatisfaction, y = n)) +
+  geom_bar(fill = '#41AB5D', stat = "identity", width = 0.7)+
+  labs(y = "Amount of respondents", x = "Job satisfaction", title = paste('Job satisfaction -', country)) +
+  geom_text(aes(label=n, y = 5), vjust = 0.5, hjust = -0.1, family = "Lucida Sans Unicode", size = 2.75) +
+  theme +
+  coord_flip() +
+  theme(axis.text.x=element_text(angle = 0, hjust = 0, size = 8),
+        axis.title.y=element_blank())
+}
+
+plot_fun(country)
+
+```
+
+## Overall most important at work
+
+Respondents were also asked to rate, what is important for them at work (`1` being the most important and `10` - the least important). Results can be found below (factors are sorted from the most valuable at work to the least):
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+data <- survey18 %>%
+  filter(Country == country) %>%
+  select(starts_with(("AssessJob"))) %>%
+  summarise("The industry that I'd be working in" = round(mean(AssessJob1, na.rm = TRUE),2),
+            "The financial performance or funding status of the company or organization" = round(mean(AssessJob2, na.rm = TRUE),2),
+            "The specific department or team I'd be working on" = round(mean(AssessJob3, na.rm = TRUE),2),
+            "The languages, frameworks, and other technologies I'd be working with" = round(mean(AssessJob4, na.rm = TRUE),2),
+            "The compensation and benefits offered" = round(mean(AssessJob5, na.rm = TRUE),2),
+            "The office environment or company culture" = round(mean(AssessJob6, na.rm = TRUE),2),
+            "The opportunity to work from home/remotely" = round(mean(AssessJob7, na.rm = TRUE),2),
+            "Opportunities for professional development" = round(mean(AssessJob8, na.rm = TRUE),2),
+            "The diversity of the company or organization" = round(mean(AssessJob9, na.rm = TRUE),2),
+            "How widely used or impactful the product or service I'd be working on is" = round(mean(AssessJob10, na.rm = TRUE),2)) %>%
+  gather("Choice", "Mean") %>%
+  arrange(Mean)
+  
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results= "asis"}
+kable(data, "html") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F, position = "left") %>%
+  column_spec(1, bold = T, border_right = T, width = "50em") %>%
+  column_spec(2, width = "10em")
+
+```
+
+### Each factor separately {.tabset .tabset-fade .tabset-pills}
+
+```{r fig.align="center", message=FALSE, warning=FALSE, include=FALSE}
+plot_data <- function(country, needed_column, needed_column2){
+  require("dplyr")
+  require("lazyeval")
+  filter_criteria <- interp(~y %in% x, .values=list(y = as.name(needed_column), x = 1:10))
+  filter_criteria2 <- interp(~y == x, .values=list(y = as.name(needed_column2), x = country))
+  survey18 %>%
+    filter_(filter_criteria2, filter_criteria) %>%
+    group_by_(as.name(needed_column)) %>%
+    summarise(n = n()) %>%
+    ungroup() %>%
+    mutate(freq = n/sum(n)) -> result
+  return(result)}
+
+plot_fun  <- function(data, title){
+  ggplot(data, aes(x = data[,1],y=freq))+
+    geom_bar(stat='identity', fill = '#74C476') +
+    theme +
+    scale_x_continuous(breaks=c(1:10)) +
+    labs(x = 'Scores (1 is the most important)' ,y = 'Percentage of Respondents', title = title)+
+    scale_y_continuous(labels = percent_format()) +
+    geom_text(aes(label=percent_format()(freq)), vjust = -0.5, hjust = 0.5, family = "Lucida Sans Unicode", size = 2.75)+
+    theme(axis.text.x=element_text(angle = 0, hjust = 0))}
+```
+
+#### The industry that I'd be working in
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center"}
+data <- plot_data(country,"AssessJob1", "Country")
+plot_fun(data, "The industry that I'd be working in")
+```
+
+
+#### The financial performance or funding status of the company or organization
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center"}
+data <- plot_data(country,"AssessJob2", "Country")
+plot_fun(data, "The financial performance or funding status \n of the company or organization")
+
+```
+
+#### The specific department or team I'd be working on
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center"}
+data <- plot_data(country,"AssessJob3", "Country")
+plot_fun(data, "The specific department or team I'd be working on")
+
+```
+
+#### The languages, frameworks, and other technologies I'd be working with
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center"}
+data <- plot_data(country,"AssessJob4", "Country")
+plot_fun(data, "The languages, frameworks, and other technologies \n I'd be working with")
+
+```
+
+#### The compensation and benefits offered
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center"}
+data <- plot_data(country,"AssessJob5", "Country")
+plot_fun(data, "The compensation and benefits offered")
+
+```
+
+#### The office environment or company culture
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center"}
+data <- plot_data(country,"AssessJob6", "Country")
+plot_fun(data, "The office environment or company culture")
+```
+
+#### The opportunity to work from home/remotely
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center"}
+data <- plot_data(country,"AssessJob7", "Country")
+plot_fun(data, "The opportunity to work from home/remotely")
+```
+
+#### Opportunities for professional development
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center"}
+data <- plot_data(country,"AssessJob8", "Country")
+plot_fun(data, "Opportunities for professional development")
+
+```
+
+#### The diversity of the company or organization
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center"}
+data <- plot_data(country,"AssessJob9", "Country")
+plot_fun(data, "The diversity of the company or organization")
+
+```
+
+#### How widely used or impactful the product or service I'd be working on is
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center"}
+data <- plot_data(country,"AssessJob10", "Country")
+plot_fun(data, "How widely used or impactful the product or service \n  I'd be working on is")
+
+```
+
+## Overall benefits 
+
+Benefits were split and evaluated separately (`1` being the most important and `10` - the least important). Results can be found below (factors are sorted from the most valuable at work to the least):
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+data <- survey18 %>%
+  filter(Country == country) %>%
+  select(starts_with(("AssessBenefits"))) %>%
+  summarise("Salary and/or bonuses" = round(mean(AssessBenefits1, na.rm = TRUE),2),
+            "Stock options or shares" = round(mean(AssessBenefits2, na.rm = TRUE),2),
+            "Health insurance" = round(mean(AssessBenefits3, na.rm = TRUE),2),
+            "Parental leave" = round(mean(AssessBenefits4, na.rm = TRUE),2),
+            "Fitness or wellness benefit" = round(mean(AssessBenefits5, na.rm = TRUE),2),
+            "Retirement or pension savings matching" = round(mean(AssessBenefits6, na.rm = TRUE),2),
+            "Company-provided meals or snacks" = round(mean(AssessBenefits7, na.rm = TRUE),2),
+            "Computer/office equipment allowance" = round(mean(AssessBenefits8, na.rm = TRUE),2),
+            "Childcare benefit" = round(mean(AssessBenefits9, na.rm = TRUE),2),
+            "Transportation benefit" = round(mean(AssessBenefits10, na.rm = TRUE),2),
+            "Conference or education budget" = round(mean(AssessBenefits11, na.rm = TRUE),2)) %>%
+  gather("Choice", "Mean") %>%
+  arrange(Mean)
+  
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results= "asis"}
+kable(data, "html") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F, position = "left") %>%
+  column_spec(1, bold = T, border_right = T, width = "50em") %>%
+  column_spec(2, width = "10em")
+
+```
+
+### Each factor separately {.tabset .tabset-fade .tabset-pills}
+
+```{r fig.align="center", message=FALSE, warning=FALSE, include=FALSE}
+plot_data <- function(country, needed_column, needed_column2){
+  require("dplyr")
+  require("lazyeval")
+  filter_criteria <- interp(~y %in% x, .values=list(y = as.name(needed_column), x = 1:10))
+  filter_criteria2 <- interp(~y == x, .values=list(y = as.name(needed_column2), x = country))
+  survey18 %>%
+    filter_(filter_criteria2, filter_criteria) %>%
+    group_by_(as.name(needed_column)) %>%
+    summarise(n = n()) %>%
+    ungroup() %>%
+    mutate(freq = n/sum(n)) -> result
+  return(result)}
+
+plot_fun  <- function(data, title){
+  ggplot(data, aes(x = data[,1],y=freq))+
+    geom_bar(stat='identity', fill = '#74C476') +
+    theme +
+    scale_x_continuous(breaks=c(1:10)) +
+    labs(x = 'Scores (1 is the most important)' ,y = 'Percentage of Respondents', title = title)+
+    scale_y_continuous(labels = percent_format()) +
+    geom_text(aes(label=percent_format()(freq)), vjust = -0.5, hjust = 0.5, family = "Lucida Sans Unicode", size = 2.75)+
+    theme(axis.text.x=element_text(angle = 0, hjust = 0))}
+```
+
+#### Salary and/or bonuses
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center"}
+data <- plot_data(country,"AssessBenefits1", "Country")
+plot_fun(data, "Salary and/or bonuses")
+
+```
+
+#### Stock options or shares
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center"}
+data <- plot_data(country,"AssessBenefits2", "Country")
+plot_fun(data, "Stock options or shares")
+
+```
+
+#### Health insurance
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center"}
+data <- plot_data(country,"AssessBenefits3", "Country")
+plot_fun(data, "Health insurance")
+
+```
+
+#### Parental leave
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center"}
+data <- plot_data(country,"AssessBenefits4", "Country")
+plot_fun(data, "Parental leave")
+
+```
+
+
+#### Fitness or wellness benefit
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center"}
+data <- plot_data(country,"AssessBenefits5", "Country")
+plot_fun(data, "Fitness or wellness benefit")
+
+```
+
+#### Retirement or pension savings matching
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center"}
+data <- plot_data(country,"AssessBenefits6", "Country")
+plot_fun(data, "Retirement or pension savings matching")
+
+```
+
+#### Company-provided meals or snacks
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center"}
+data <- plot_data(country,"AssessBenefits7", "Country")
+plot_fun(data, "Company-provided meals or snacks")
+
+```
+
+#### Computer/office equipment allowance
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center"}
+data <- plot_data(country,"AssessBenefits8", "Country")
+plot_fun(data, "Computer/office equipment allowance")
+
+```
+
+
+#### Childcare benefit
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center"}
+data <- plot_data(country,"AssessBenefits9", "Country")
+plot_fun(data, "Childcare benefit")
+
+```
+
+#### Transportation benefit
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center"}
+data <- plot_data(country,"AssessBenefits10", "Country")
+plot_fun(data, "Transportation benefit")
+
+```
+
+#### Conference or education budget
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center"}
+data <- plot_data(country,"AssessBenefits11", "Country")
+plot_fun(data, "Conference or education budget")
+
+```
+
+## 5 years perspective
+
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+data <- survey18 %>%
+  filter(Country == country, !is.na(HopeFiveYears)) %>%
+  group_by(HopeFiveYears) %>%
+  summarise(Respondents = n()) %>%
+  ungroup() %>%
+  mutate(Percentage = percent_format()(Respondents/sum(Respondents))) %>%
+  arrange(desc(Respondents))
+```
+
+Participants could choose what is their goal after five years. Most of them (`r data$Respondents[1]`, `r data$Percentage[1]`) chose *`r data$HopeFiveYears[1]`*, `r data$Respondents[2]` (`r data$Percentage[2]`) - *`r data$HopeFiveYears[2]`* and `r data$Respondents[3]` (`r data$Percentage[3]`) - *`r data$HopeFiveYears[3]`*.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results= "asis"}
+kable(data, "html") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F, position = "left") %>%
+  column_spec(1, bold = T, border_right = T, width = "50em") %>%
+  column_spec(2:3, width = "10em")
+
+```
+
+
+# Salary distribution
+
+To avoid putting outliers to our data, all observations with more than `r dollar_format(prefix="€")(salary_limit)` per month were eliminated from the further analysis.
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+data <- survey18 %>% 
+  filter(Country %in% c(country)) %>%
+  filter(!is.na(DevType), ConvertedSalary > 1, (ConvertedSalary/12 * 0.86) <= salary_limit, !is.na(ConvertedSalary), Employment %in% c('Full-time'), !is.na(SalaryType)) %>%
+  select(DevType, ConvertedSalary) %>%
+  mutate(DevType = str_split(DevType, pattern = ";")) %>%
+  unnest(DevType) %>%
+  group_by(DevType) %>%
+  summarize("Respondents" = n(),
+            "Median" = dollar_format(prefix="€")(round(median(ConvertedSalary/12 * 0.86), 0)),
+            "Max" = dollar_format(prefix="€")(round(max(ConvertedSalary/12 * 0.86), 0)),
+            "Min" = dollar_format(prefix="€")(round(min(ConvertedSalary/12 * 0.86), 0)),
+            "Average" = dollar_format(prefix="€")(round(mean(ConvertedSalary/12 * 0.86), 0))) %>%
+  arrange(DevType)
+```
+
+## Main statistics by Role
+
+First of all, let's check the main statistics for salary in `r country`:
+
+  
+```{r echo=FALSE, message=FALSE, warning=FALSE, results= "asis"}
+kable(data, "html", caption = "Only for Full-time employees") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F, position = "left") %>%
+  column_spec(1, bold = T, border_right = T, width = "30em") %>%
+  column_spec(2:6, width = "10em")
+
+```
+
+## Distribution by Role
+
+To see a full view, we can check violin graph, which shows salary distribution (only for Full-time employees). 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", paged.print=TRUE}
+plot_fun <- function(country, employment){
+  survey18 %>% filter(Employment %in% c(employment)) %>% 
+  filter(!is.na(DevType)) %>%
+  filter(!is.na(Country), Country %in% c(country), ConvertedSalary > 1, (ConvertedSalary/12 * 0.86) <= salary_limit, !is.na(ConvertedSalary), !is.na(SalaryType)) %>% 
+  select(DevType,ConvertedSalary,  Employment) %>%
+  mutate(DevType = str_split(DevType, pattern = ";")) %>%
+  unnest(DevType) %>%
+  arrange(DevType) %>%
+  ggplot(aes(x = DevType, y = ConvertedSalary/12 * 0.86)) +
+  geom_violin(color = '#08519C', fill = '#08519C', alpha = 0.4) +
+  geom_jitter(color = '#08519C', fill = '#08519C', alpha = 0.7, position = position_jitter(width = .2), size = 1) +
+  theme +
+  labs(y = "Monthy Salary", x = "Role", title = paste('Salary by Developer Role -', country)) +
+  scale_y_continuous(label=dollar_format(prefix="€"), breaks = seq(0,15000,1000)) +
+  coord_cartesian(ylim = c(0, 15000)) +
+  theme(legend.position = 'none', axis.title.y = element_blank()) +
+    coord_flip()}
+
+plot_fun(country, 'Full-time')
+
+```
+
+## Salary by programming language
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+data <- survey18 %>%
+  filter(!is.na(Country), Employment %in% c('Full-time'),Country %in% c(country), ConvertedSalary > 1, (ConvertedSalary/12 * 0.86) <= salary_limit, !is.na(ConvertedSalary), !is.na(LanguageWorkedWith), !is.na(SalaryType)) %>% 
+  select(LanguageWorkedWith,ConvertedSalary,YearsCodingProf) %>%
+  replace(is.na(.), 'Not provided') %>%
+  mutate( LanguageWorkedWith = str_split(LanguageWorkedWith, pattern = ";"),
+          Salary = as.numeric(ConvertedSalary/12 * 0.86)) %>%
+  unnest(LanguageWorkedWith) %>% 
+  select(LanguageWorkedWith, YearsCodingProf, Salary) %>% 
+  group_by(LanguageWorkedWith,YearsCodingProf) %>% 
+  summarize(MedianSalary = dollar_format(prefix="€")(round(median(Salary, na.rm=TRUE),0)))
+
+data$YearsCodingProf <- factor(data$YearsCodingProf, ordered = TRUE, levels = c("Not provided", "0-2 years","3-5 years","6-8 years","9-11 years","12-14 years","15-17 years","18-20 years","21-23 years","24-26 years","27-29 years","30 or more years"))
+
+ data <- data %>%
+  spread(YearsCodingProf, MedianSalary)
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", paged.print=TRUE}
+options(knitr.kable.NA = '')
+kable(data, "html", caption = "Only for Full-time employees, Monthly median") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F, position = "left") %>%
+  column_spec(1, bold = T, border_right = T, width = "15em")
+
+```

@@ -1,0 +1,41 @@
+body {
+  color: rgb(0, 60, 90);
+  font-size: 15px;
+  font-family: "Lucida Sans Unicode";
+}
+
+h1 {
+  color: rgb(205, 97, 85);
+  font-size: 20px;
+  font-family: "Lucida Sans Unicode";
+}
+
+h2 {
+  color: rgb(205, 97, 85);
+  font-size: 18px;
+  font-family: "Lucida Sans Unicode";
+}
+
+h3 {
+  color: rgb(205, 97, 85);
+  font-size: 16px;
+  font-family: "Lucida Sans Unicode";
+}
+
+h4 {
+  color: rgb(59,158,129);
+  font-size: 16px;
+  font-family: "Lucida Sans Unicode";
+}
+
+h5 {
+  color: rgb(59,158,129);
+  font-size: 16px;
+  font-family: "Lucida Sans Unicode";
+}
+
+h6 {
+  color: rgb(59,158,129);
+  font-size: 16px;
+  font-family: "Lucida Sans Unicode";
+}

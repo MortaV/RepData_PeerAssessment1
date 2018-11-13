@@ -12,53 +12,68 @@ output:
 
 First of all we need to unzip and read the data from activity.zip:
 
-```{r}
 
+```r
 unzipped <- unzip("activity.zip")
 data <- read.csv("activity.csv")
-
 ```
 
 To unserstand, what is needed to be done to preprocess the data, we should check
 how the data looks like and to get summary statistics:
 
-```{r}
 
+```r
 str(data)
-
 ```
 
-```{r}
+```
+## 'data.frame':	17568 obs. of  3 variables:
+##  $ steps   : int  NA NA NA NA NA NA NA NA NA NA ...
+##  $ date    : Factor w/ 61 levels "2012-10-01","2012-10-02",..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
+```
 
+
+```r
 summary(data)
+```
 
+```
+##      steps                date          interval     
+##  Min.   :  0.00   2012-10-01:  288   Min.   :   0.0  
+##  1st Qu.:  0.00   2012-10-02:  288   1st Qu.: 588.8  
+##  Median :  0.00   2012-10-03:  288   Median :1177.5  
+##  Mean   : 37.38   2012-10-04:  288   Mean   :1177.5  
+##  3rd Qu.: 12.00   2012-10-05:  288   3rd Qu.:1766.2  
+##  Max.   :806.00   2012-10-06:  288   Max.   :2355.0  
+##  NA's   :2304     (Other)   :15840
 ```
 
 So it seems that `steps` column has some missing data which we will ignore for now. Also, `date` column has incorrect type. We will change it to *date* with *lubridate* package.
 
-```{r message=FALSE, warning=FALSE}
 
+```r
 library(lubridate)
 data$date <- ymd(data$date)
-
 ```
 
 ## What is mean total number of steps taken per day?
 
 We will change a data set a little for our upcoming analysis. We will need to calculate total amount of steps per day.
 
-```{r message=FALSE, warning=TRUE}
+
+```r
 library(tidyverse)
 
 data_per_day <- data %>%
     group_by(date) %>%
     summarize(total_steps = sum(steps, na.rm = TRUE))
-
 ```
 
 When the data is ready, let's explore it with a simple histogram:
 
-```{r message=FALSE, warning=TRUE}
+
+```r
 library(extrafont)
 library(scales)
 
@@ -89,11 +104,11 @@ data_per_day %>%
                colour = "#003C5A") +
     scale_linetype_manual(name = "Metric", 
                         values = c(Mean = 1, Median = 2))
-    
-
 ```
 
-Reported mean is `r comma_format(accuracy = 0.01)(data_mean)` steps per day and median is `r comma_format(accuracy = 0.01)(data_median)` steps per day.
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+
+Reported mean is 9,354.23 steps per day and median is 10,395.00 steps per day.
 
 ## What is the average daily activity pattern?
 
@@ -101,8 +116,8 @@ To understand our data even deeper, let's check during which parts of the day pe
 
 First we will prepare needed data:
 
-```{r}
 
+```r
 data_agg <- data %>%
     group_by(date, interval) %>%
     summarize(total_steps = sum(steps, na.rm = TRUE)) %>%
@@ -112,13 +127,12 @@ data_agg <- data %>%
 
 max_value <- max(data_agg$avg_steps)
 max_interval <- data_agg$interval[which.max(data_agg$avg_steps)]
-
 ```
 
 And then check a time series graph:
 
-```{r}
 
+```r
 data_agg %>%
     ggplot(aes(x = interval, y = avg_steps)) +
     geom_line(colour = '#CD6155') +
@@ -128,44 +142,49 @@ data_agg %>%
          y = "Average steps",
          x = "Day interval (5 min)") +
     scale_x_continuous(labels = comma_format())
-
 ```
 
-The graph shows us that the day interval when people are the most active is `r comma_format(accuracy = 0.01)(max_interval)`. On average, people went `r comma_format(accuracy = 0.01)(max_value)` steps during that interval.
+![](PA1_template_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+
+The graph shows us that the day interval when people are the most active is 835.00. On average, people went 179.13 steps during that interval.
 
 ## Imputing missing values
 
 As we saw in the beginning, there are some missing values in the data. To be exact:
 
-```{r}
 
+```r
 sapply(data, function(x) sum(is.na(x)))
+```
 
+```
+##    steps     date interval 
+##     2304        0        0
 ```
 
 I have decided to impute this missing data with the average for the same interval (as data differs a lot for a particular interval).
 
-```{r}
+
+```r
 impute.mean <- function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))
 data_imputed <- data %>%
     group_by(interval) %>%
     mutate(steps = impute.mean(steps))
-
 ```
 
 Now let's check how the data have changed with drawing the same histogram as previously and calculating mean and median.
 
-```{r message=FALSE, warning=TRUE}
 
+```r
 data_per_day_imputed <- data_imputed %>%
     group_by(date) %>%
     summarize(total_steps = sum(steps, na.rm = TRUE)) %>%
     ungroup()
-
 ```
 
 
-```{r message=FALSE, warning=TRUE}
+
+```r
 data_mean_imputed <- mean(data_per_day_imputed$total_steps)
 data_median_imputed <- median(data_per_day_imputed$total_steps)
 
@@ -188,11 +207,11 @@ data_per_day_imputed %>%
                colour = "#003C5A") +
     scale_linetype_manual(name = "Metric", 
                         values = c(Mean = 1, Median = 2))
-    
-
 ```
 
-The new mean is `r comma_format(accuracy = 0.01)(data_mean_imputed)` which is `r comma_format(accuracy = 0.01)(abs(diff_mean))` `r ifelse(diff_mean < 0, "less", "more")` than previously. The new median is `r comma_format(accuracy = 0.01)(data_median_imputed)` which is `r comma_format(accuracy = 0.01)(abs(diff_median))`  `r ifelse(diff_median < 0, "less", "more")` than previously. 
+![](PA1_template_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
+
+The new mean is 10,766.19 which is 1,411.96 more than previously. The new median is 10,766.19 which is 371.19  more than previously. 
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
@@ -200,8 +219,8 @@ Seasonality is quite important in time series data, so it would be good to check
 
 First, let's prepare the data.
 
-```{r}
 
+```r
 data_week <- data %>%
     group_by(date, interval) %>%
     summarize(total_steps = sum(steps, na.rm = TRUE)) %>%
@@ -210,11 +229,10 @@ data_week <- data %>%
            weekend_indication = factor(ifelse(weekdays %in% c("Saturday", "Sunday"), "Weekend", "Weekday"))) %>%
     group_by(weekend_indication, interval) %>%
     summarize(avg_steps = mean(total_steps))
-
 ```
 
-```{r}
 
+```r
 data_week %>%
     ggplot(aes(x = interval, y = avg_steps)) +
     geom_line(colour = '#CD6155') +
@@ -225,8 +243,9 @@ data_week %>%
          x = "Day interval (5 min)") +
     scale_x_continuous(labels = comma_format()) +
     facet_grid(weekend_indication~.)
-
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
 
 As we can see, weekends don't have a peak at around as it is probably caused by the working hours (pleople are going to work at that time).
 

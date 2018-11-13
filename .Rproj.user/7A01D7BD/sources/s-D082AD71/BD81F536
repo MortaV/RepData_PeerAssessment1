@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1542117842477.000,
+    "dirty" : true,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "BD81F536",
+    "lastKnownWriteTime" : 1532417534,
+    "last_content_update" : 1542126667127,
+    "path" : "C:/Users/PC/Desktop/Morta/Ad Serving/20180129_Device Insights/4. Analysis/Queries/clients.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "53,10",
+        "scrollLine" : "35"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

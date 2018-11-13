@@ -1,0 +1,7 @@
+"0","data_imputed <- data %>%
+    group_by(interval) %>%
+    mutate(steps = impute.mean(steps))
+"
+"2","Error in mutate_impl(.data, dots) : 
+  Evaluation error: could not find function ""impute.mean"".
+"
