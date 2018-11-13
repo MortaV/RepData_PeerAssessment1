@@ -1,6 +1,0 @@
-"0","data_per_day_imputed <- data_imputed %>%
-    group_by(date) %>%
-    summarize(total_steps = sum(steps, na.rm = TRUE))
-"
-"2","Error in eval(lhs, parent, parent) : object 'data_imputed' not found
-"

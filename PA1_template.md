@@ -7,10 +7,11 @@ output:
     toc: yes
 ---
 
+I have added a css file to make an html file more personal :) it is not reflected in .md file, but you can try checking html file or adding css to yours!
 
 ## Loading and preprocessing the data
 
-First of all we need to unzip and read the data from activity.zip:
+First of all we need to unzip and read the data from activity.zip folder:
 
 
 ```r
@@ -18,8 +19,8 @@ unzipped <- unzip("activity.zip")
 data <- read.csv("activity.csv")
 ```
 
-To unserstand, what is needed to be done to preprocess the data, we should check
-how the data looks like and to get summary statistics:
+To unserstand, what needs to be done to preprocess the data, we should check
+how the data looks like and get summary statistics:
 
 
 ```r
@@ -57,14 +58,24 @@ library(lubridate)
 data$date <- ymd(data$date)
 ```
 
+We should also change interval data as it has form *hhmm* instead of just representing actual time of the date. You can see it from summary statistics, where max value for `interval` is 2355 what would represent 2.826\times 10^{4} hours a day...
+
+
+```r
+library(tidyverse)
+
+data <- data %>%
+    mutate(hours = str_pad(floor(interval / 100), 2, side="left", pad="0"),
+           minutes = str_pad(interval %% 100, 2, side="left", pad="0"),
+           time = hms::as.hms(paste(hours, minutes, '00', sep = ":")))
+```
+
 ## What is mean total number of steps taken per day?
 
 We will change a data set a little for our upcoming analysis. We will need to calculate total amount of steps per day.
 
 
 ```r
-library(tidyverse)
-
 data_per_day <- data %>%
     group_by(date) %>%
     summarize(total_steps = sum(steps, na.rm = TRUE))
@@ -106,7 +117,7 @@ data_per_day %>%
                         values = c(Mean = 1, Median = 2))
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+![](PA1_template_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
 
 Reported mean is 9,354.23 steps per day and median is 10,395.00 steps per day.
 
@@ -119,14 +130,14 @@ First we will prepare needed data:
 
 ```r
 data_agg <- data %>%
-    group_by(date, interval) %>%
+    group_by(date, time) %>%
     summarize(total_steps = sum(steps, na.rm = TRUE)) %>%
     ungroup() %>%
-    group_by(interval) %>%
+    group_by(time) %>%
     summarize(avg_steps = mean(total_steps))
 
 max_value <- max(data_agg$avg_steps)
-max_interval <- data_agg$interval[which.max(data_agg$avg_steps)]
+max_interval <- data_agg$time[which.max(data_agg$avg_steps)]
 ```
 
 And then check a time series graph:
@@ -134,19 +145,20 @@ And then check a time series graph:
 
 ```r
 data_agg %>%
-    ggplot(aes(x = interval, y = avg_steps)) +
+    ggplot(aes(x = as.POSIXct(time), y = avg_steps)) +
     geom_line(colour = '#CD6155') +
     geom_point(colour = '#CD6155') +
     theme +
     labs(title = "Average amount of steps on daily interval",
          y = "Average steps",
-         x = "Day interval (5 min)") +
-    scale_x_continuous(labels = comma_format())
+         x = "Time of the day") +
+    scale_x_datetime(breaks = date_breaks("2 hours"),
+                     labels = date_format("%H:%M"))
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+![](PA1_template_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
 
-The graph shows us that the day interval when people are the most active is 835.00. On average, people went 179.13 steps during that interval.
+The graph shows us that the day interval when people are the most active is 3.09\times 10^{4}. On average, people went 179.13 steps during that interval.
 
 ## Imputing missing values
 
@@ -158,8 +170,8 @@ sapply(data, function(x) sum(is.na(x)))
 ```
 
 ```
-##    steps     date interval 
-##     2304        0        0
+##    steps     date interval    hours  minutes     time 
+##     2304        0        0        0        0        0
 ```
 
 I have decided to impute this missing data with the average for the same interval (as data differs a lot for a particular interval).
@@ -168,8 +180,8 @@ I have decided to impute this missing data with the average for the same interva
 ```r
 impute.mean <- function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))
 data_imputed <- data %>%
-    group_by(interval) %>%
-    mutate(steps = impute.mean(steps))
+    group_by(time) %>%
+    mutate(steps_imp = impute.mean(steps))
 ```
 
 Now let's check how the data have changed with drawing the same histogram as previously and calculating mean and median.
@@ -209,9 +221,9 @@ data_per_day_imputed %>%
                         values = c(Mean = 1, Median = 2))
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
+![](PA1_template_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
 
-The new mean is 10,766.19 which is 1,411.96 more than previously. The new median is 10,766.19 which is 371.19  more than previously. 
+The new mean is 9,354.23 which is 0.00 more than previously. The new median is 10,395.00 which is 0.00  more than previously. 
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
@@ -222,31 +234,34 @@ First, let's prepare the data.
 
 ```r
 data_week <- data %>%
-    group_by(date, interval) %>%
+    group_by(date, time) %>%
     summarize(total_steps = sum(steps, na.rm = TRUE)) %>%
     ungroup() %>%
     mutate(weekdays = weekdays(date),
            weekend_indication = factor(ifelse(weekdays %in% c("Saturday", "Sunday"), "Weekend", "Weekday"))) %>%
-    group_by(weekend_indication, interval) %>%
+    group_by(weekend_indication, time) %>%
     summarize(avg_steps = mean(total_steps))
 ```
+
+And then let's check the average amount of steps daily, split by weekdend and weekdays.
 
 
 ```r
 data_week %>%
-    ggplot(aes(x = interval, y = avg_steps)) +
+    ggplot(aes(x = as.POSIXct(time), y = avg_steps)) +
     geom_line(colour = '#CD6155') +
     geom_point(colour = '#CD6155') +
     theme +
     labs(title = "Average amount of steps on daily interval",
          y = "Average steps",
-         x = "Day interval (5 min)") +
-    scale_x_continuous(labels = comma_format()) +
+         x = "Time of the day") +
+    scale_x_datetime(breaks = date_breaks("2 hours"),
+                     labels = date_format("%H:%M")) +
     facet_grid(weekend_indication~.)
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+![](PA1_template_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
 
-As we can see, weekends don't have a peak at around as it is probably caused by the working hours (pleople are going to work at that time).
+As we can see, weekends don't have such a huge peak as it is probably caused by the working hours (people are going to work at around 9:00). 
 
 

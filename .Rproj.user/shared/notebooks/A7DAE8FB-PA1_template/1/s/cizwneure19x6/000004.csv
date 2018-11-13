@@ -1,4 +1,0 @@
-"0","knit2html(""PA1_template.Rmd"")
-"
-"2","Error: It seems you should call rmarkdown::render() instead of knitr::knit2html() because PA1_template.Rmd appears to be an R Markdown v2 document.
-"

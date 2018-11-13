@@ -1,0 +1,7 @@
+"0","data_new <- data %>%
+    mutate(hours = str_pad(floor(interval / 100), 2, side=""left"", pad=""0""),
+           minutes = str_pad(interval %% 100), 2, side=""left"", pad=""0"")
+"
+"2","Error in mutate_impl(.data, dots) : 
+  Evaluation error: argument ""width"" is missing, with no default.
+"
