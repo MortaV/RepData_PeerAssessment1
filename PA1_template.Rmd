@@ -167,7 +167,7 @@ I have decided to impute this missing data with the average for the same interva
 impute.mean <- function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))
 data_imputed <- data %>%
     group_by(time) %>%
-    mutate(steps_imp = impute.mean(steps))
+    mutate(steps = impute.mean(steps))
 
 ```
 

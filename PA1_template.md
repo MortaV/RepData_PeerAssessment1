@@ -189,7 +189,7 @@ I have decided to impute this missing data with the average for the same interva
 impute.mean <- function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))
 data_imputed <- data %>%
     group_by(time) %>%
-    mutate(steps_imp = impute.mean(steps))
+    mutate(steps = impute.mean(steps))
 ```
 
 Now let's check how the data have changed with drawing the same histogram as previously and calculating mean and median.
@@ -235,7 +235,7 @@ data_per_day_imputed %>%
 
 ![](PA1_template_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
 
-The new mean is 9,354.23 which is 0.00 more than previously. The new median is 10,395.00 which is 0.00  more than previously. 
+The new mean is 10,766.19 which is 1,411.96 more than previously. The new median is 10,766.19 which is 371.19  more than previously. 
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
